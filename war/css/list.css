@@ -1,0 +1,218 @@
+body {
+	margin: 0;
+	padding: 39px 0 50px 0;
+	width: 500px;
+}
+* html body {
+	overflow: hidden;
+}
+
+#header {
+	position: fixed !important;
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 0 0 3px 0;
+	padding: 3px;
+	float: left;
+	width: 500px;
+	height: 32px;
+	border-bottom: 1px solid #777777;
+	background-color: #ffffff;
+}
+
+#header .title {
+	float: left;
+	width: 195px;
+	height: 32px;
+	line-height: 32px;
+	font-size: 24px;
+}
+
+#header .reload {
+	float: left;
+	width: 32px;
+	height: 32px;
+	background-image: url("/img/reload.png");
+}
+
+#header .reload:hover {
+	background-image: url("/img/reload_hover.png");
+}
+
+#header .notlogin {
+	background-image: none;
+}
+
+#header .notlogin:hover {
+	background-image: none;
+}
+
+#header .login {
+	float: left;
+	width: 267px;
+	height: 32px;
+	line-height: 32px;
+	text-align: right;
+}
+
+#header .logout {
+	float: left;
+	width: 267px;
+	height: 32px;
+	line-height: 32px;
+	text-align: right;
+}
+
+#kamieshibox {
+	clear: left;
+	overflow: auto;
+}
+
+.tweetbox {
+	clear: left;
+	float: left;
+	margin: 2px 2px 8px 2px;
+	width: 496px;
+	border: solid 1px #e0e0e0;
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	overflow: auto;
+}
+.iconbox {
+	float: left;
+	width: 30px;
+	height: 30px;
+}
+.iconbox img{
+	margin: 3px;
+	width: 24px;
+	height: 24px;
+}
+.namebox {
+	clear: left;
+	border-top: 2px;
+	border-bottom: 2px;
+	width: 466px;
+}
+.messagebox {
+	float: left;
+	width: 320px;
+}
+.datebox {
+	float: left;
+	width: 136px;
+	margin-right: 10px;
+	text-align: right;
+}
+.imagebox {
+	clear: left;
+	width: 456px;
+	height: 110px;
+	margin: 5px;
+}
+.operationbox {
+	clear: left;
+	margin-bottom: 7px;
+	width: 456px;
+}
+.favo {
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border: solid 1px #909090;
+	background-color: #eeeecc;
+	padding: 0 5px;
+}
+.favo:hover {
+	background-color: #e0e020;
+}
+.rt {
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border: solid 1px #909090;
+	background-color: #bce2e8;
+	padding: 0 5px;
+}
+.rt:hover {
+	background-color: #3030ff;
+	color: #ffffff;
+}
+.kihon {
+	float: left;
+}
+.trim {
+	overflow: hidden;
+	width: 100px;
+	height: 100px;
+	margin: 3px;
+	position: relative;
+	float: left;
+	border: solid 1px #b0b0b0;
+	border-radius: 10px;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+.trim img {
+	position: absolute;
+	height: 100px;
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#kamieshibox input {
+	margin: 2px;
+}
+
+#loadingbox {
+	margin: 0;
+	padding: 0;
+	width: 500px;
+	height: 24px;
+}
+
+#loadingbox img {
+	margin: 0 238px;
+}
+
+#resultbox  {
+	display: none;
+	position: fixed !important;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 500px;
+	height: 50px;
+	line-height: 50px;
+	text-align: center;
+}
+#alltweetbox {
+	float: left;
+}
+#continuebox {
+	border: 2px solid #505050;
+	margin: 3px 150px;
+	width: 200px;
+	height: 24px;
+	line-height: 24px;
+	text-align: center;
+	float: left;
+	border-radius: 20px;
+	-webkit-border-radius: 20px;
+	-moz-border-radius: 20px;
+}
+
+div.success {
+	background-color: #4E9ABE;
+	color: #fff;
+}
+
+div.error {
+	background-color: #ff0000;
+	color: #fff;
+}
