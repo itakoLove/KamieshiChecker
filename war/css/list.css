@@ -23,21 +23,10 @@ body {
 
 #header .title {
 	float: left;
-	width: 195px;
+	width: 227px;
 	height: 32px;
 	line-height: 32px;
 	font-size: 24px;
-}
-
-#header .reload {
-	float: left;
-	width: 32px;
-	height: 32px;
-	background-image: url("/img/reload.png");
-}
-
-#header .reload:hover {
-	background-image: url("/img/reload_hover.png");
 }
 
 #header .notlogin {
@@ -48,7 +37,7 @@ body {
 	background-image: none;
 }
 
-#header .login {
+#header .menubutton {
 	float: left;
 	width: 267px;
 	height: 32px;
@@ -56,12 +45,43 @@ body {
 	text-align: right;
 }
 
-#header .logout {
-	float: left;
-	width: 267px;
-	height: 32px;
-	line-height: 32px;
-	text-align: right;
+#header .menubutton img {
+	margin: 3px 5px 3px 0;
+	height: 16px;
+	width: 16px;
+	border: 1px solid #999999;
+	padding: 4px;
+	border-radius: 3px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+}
+
+#menubox {
+	position: fixed !important;
+	position: absolute;
+	top: 32px;
+	right: 5px;
+	width: 200px;
+	border: 1px solid #666666;
+	background-color: #ffffff;
+	border-radius: 3px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+}
+
+#menubox ul {
+	list-style-type: none;
+	margin: 10px;
+	padding: 0;
+}
+
+#menubox li {
+	margin: 15px 0;
+}
+
+#menubox li.border {
+	margin: 0;
+	border: 1px solid #aaaaaa;
 }
 
 #kamieshibox {

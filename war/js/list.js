@@ -2,6 +2,14 @@ var key = null;
 var page = null;
 var showNumber = 0;
 
+var switchMenu = function() {
+	if (document.getElementById('menubox').style.display == 'block') {
+		document.getElementById('menubox').style.display = 'none';
+	} else {
+		document.getElementById('menubox').style.display = 'block';
+	}
+}
+
 var encodeHTMLForm = function(data) {
 	var params = [];
 
