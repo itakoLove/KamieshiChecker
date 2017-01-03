@@ -23,7 +23,7 @@ body {
 
 #header .title {
 	float: left;
-	width: 227px;
+	width: 437px;
 	height: 32px;
 	line-height: 32px;
 	font-size: 24px;
@@ -39,7 +39,7 @@ body {
 
 #header .menubutton {
 	float: left;
-	width: 267px;
+	width: 57px;
 	height: 32px;
 	line-height: 32px;
 	text-align: right;
@@ -60,7 +60,7 @@ body {
 	position: fixed !important;
 	position: absolute;
 	top: 32px;
-	right: 5px;
+	left: 295px;
 	width: 200px;
 	border: 1px solid #666666;
 	background-color: #ffffff;

@@ -17,8 +17,8 @@
 <%
 	}
 %>
-	<div class="menubutton">
-		<img src="/img/menu.png" onclick="switchMenu();" />
+	<div class="menubutton" onclick="switchMenu();">
+		<img src="/img/menu.png" />
 	</div>
 	<div id="menubox" style="display: none;">
 		<ul>
