@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import to8823.kamieshiChecker.util.FunctionUtil;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 
@@ -20,6 +21,7 @@ public class Kamieshi extends AbstractEntity {
 	private static final String PROP_USER_SCREEN_NAME = "USER_SCREEN_NAME";
 	private static final String PROP_CREATE_DATE = "CREATE_DATE";
 	private static final String PROP_LAST_TWEET_ID = "LAST_TWEET_ID";
+	private static final String PROP_SEARCHABLE = "SEARCHABLE";
 
 	protected Kamieshi(Entity argEntity) {
 		super(argEntity);
@@ -49,6 +51,19 @@ public class Kamieshi extends AbstractEntity {
 		entity.setUnindexedProperty(PROP_LAST_TWEET_ID, argId);
 	}
 
+	public boolean canSearch() {
+		Object obj = entity.getProperty(PROP_SEARCHABLE);
+		if (obj == null) {
+			return true;
+		} else {
+			return (Boolean) obj;
+		}
+	}
+
+	public void setSearchable(boolean argSearchable) {
+		entity.setUnindexedProperty(PROP_SEARCHABLE, argSearchable);
+	}
+
 	public static boolean hasKamieshi(final DatastoreService ds, final Twitter twitter, String argUserScreenName)
 			throws TwitterException {
 		Query q = new Query(KIND_NAME);
@@ -74,6 +89,7 @@ public class Kamieshi extends AbstractEntity {
 
 			kamieshi.setUserScreenName(argUserScreenName);
 			kamieshi.setCreateDate(new Date());
+			kamieshi.setSearchable(FunctionUtil.searchableUser(twitter, argUserScreenName));
 
 			return kamieshi;
 		} else {

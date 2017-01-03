@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -18,12 +20,14 @@ import to8823.kamieshiChecker.entity.Kamieshi;
 import to8823.kamieshiChecker.util.Constants;
 import to8823.kamieshiChecker.util.PropConstants;
 import twitter4j.MediaEntity;
+import twitter4j.Paging;
 import twitter4j.Query;
 import twitter4j.QueryResult;
 import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
+import twitter4j.User;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.ConfigurationBuilder;
 
@@ -79,9 +83,7 @@ public class GetTweetListServlet extends HttpServlet {
 
 					List<Kamieshi> kamieshis = Kamieshi.getKamieshis(ds, twitter);
 					for (Kamieshi kamieshi: kamieshis) {
-						Query q = new Query("from:" + kamieshi.getUserScreenName() + " -RT filter:images");
-						QueryResult result = twitter.search(q);
-						allStatuses.addAll(result.getTweets());
+						allStatuses.addAll(getTweet(twitter, kamieshi));
 					}
 
 					if (allStatuses.size() != 0) {
@@ -106,11 +108,6 @@ public class GetTweetListServlet extends HttpServlet {
 
 							for(int j = 0; (i * TWEET_PER_PAGE + j) < allStatuses.size() && j < TWEET_PER_PAGE; j++) {
 								Status s = allStatuses.get(i * TWEET_PER_PAGE + j);
-
-//								if (s.isTruncated()) {
-//									Status newStatus = twitter.showStatus(s.getId());
-//									s = newStatus;
-//								}
 
 								message = s.getText();
 								imageUrl = new StringBuilder();
@@ -167,6 +164,49 @@ public class GetTweetListServlet extends HttpServlet {
 
 		} else {
 			out.print("{\"error\":1}");
+		}
+	}
+
+	private List<Status> getTweet(Twitter twitter, Kamieshi kamieshi)
+		throws TwitterException {
+		if (kamieshi.canSearch()) {
+			Query q = new Query("from:" + kamieshi.getUserScreenName() + " -RT filter:images");
+			QueryResult result = twitter.search(q);
+
+			return result.getTweets();
+		} else {
+			User user = twitter.showUser("@" + kamieshi.getUserScreenName());
+			List<Status> resultList = new ArrayList<Status>();
+
+			Calendar fromCal = Calendar.getInstance();
+			fromCal.add(Calendar.DAY_OF_MONTH, -3);
+
+			Date fromDate = fromCal.getTime();
+
+			int page = 1;
+			boolean isFinish = false;
+
+			while (true) {
+				List<Status> tweetList = twitter.getUserTimeline(user.getId(), new Paging(page));
+
+				for (Status s: tweetList) {
+					if (fromDate.after(s.getCreatedAt())) {
+						isFinish = true;
+						break;
+					}
+					if (s.getMediaEntities().length != 0 && s.getText().indexOf("RT @") != 0) {
+						resultList.add(s);
+					}
+				}
+
+				if (isFinish) {
+					break;
+				} else {
+					page++;
+				}
+			}
+
+			return resultList;
 		}
 	}
 
