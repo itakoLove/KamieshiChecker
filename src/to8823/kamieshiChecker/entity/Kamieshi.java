@@ -11,6 +11,7 @@ import twitter4j.TwitterException;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
@@ -22,6 +23,7 @@ public class Kamieshi extends AbstractEntity {
 	private static final String PROP_CREATE_DATE = "CREATE_DATE";
 	private static final String PROP_LAST_TWEET_ID = "LAST_TWEET_ID";
 	private static final String PROP_SEARCHABLE = "SEARCHABLE";
+	private static final String PROP_CHECK_SEARCHABLE_DATE = "CHECK_SEARCHABLE_DATE";
 
 	protected Kamieshi(Entity argEntity) {
 		super(argEntity);
@@ -64,6 +66,23 @@ public class Kamieshi extends AbstractEntity {
 		entity.setUnindexedProperty(PROP_SEARCHABLE, argSearchable);
 	}
 
+	public Date getCheckSearchableDate() {
+		Object obj = entity.getProperty(PROP_CHECK_SEARCHABLE_DATE);
+		if (obj == null) {
+			return new Date(0);
+		} else {
+			return (Date) obj;
+		}
+	}
+
+	public void setCheckSearchableDate(Date argDate) {
+		entity.setProperty(PROP_CHECK_SEARCHABLE_DATE, argDate);
+	}
+
+	public Key getParentKey() {
+		return entity.getParent();
+	}
+
 	public static boolean hasKamieshi(final DatastoreService ds, final Twitter twitter, String argUserScreenName)
 			throws TwitterException {
 		Query q = new Query(KIND_NAME);
@@ -90,6 +109,7 @@ public class Kamieshi extends AbstractEntity {
 			kamieshi.setUserScreenName(argUserScreenName);
 			kamieshi.setCreateDate(new Date());
 			kamieshi.setSearchable(FunctionUtil.searchableUser(twitter, argUserScreenName));
+			kamieshi.setCheckSearchableDate(new Date());
 
 			return kamieshi;
 		} else {
@@ -116,6 +136,21 @@ public class Kamieshi extends AbstractEntity {
 		} else {
 			throw new TwitterException("ログインしていません");
 		}
+	}
+
+	public static List<Kamieshi> getCheckKamieshi(final DatastoreService ds, Key ancestorKey) {
+		Query kamieshiQuery = new Query(KIND_NAME);
+
+		kamieshiQuery.setAncestor(ancestorKey);
+
+		PreparedQuery kamieshiPq = ds.prepare(kamieshiQuery);
+
+		List<Kamieshi> list = new ArrayList<Kamieshi>();
+		for (Entity e: kamieshiPq.asIterable(FetchOptions.Builder.withDefaults())) {
+			list.add(new Kamieshi(e));
+		}
+
+		return list;
 	}
 
 }

@@ -29,13 +29,19 @@ public class FunctionUtil {
 			return true;
 		} else {
 			User user = twitter.showUser("@" + id);
-			List<Status> statusList = twitter.getUserTimeline(user.getId());
 
-			if (!statusList.isEmpty() &&
-					fromDate.before( statusList.get(0).getCreatedAt() )) {
-				return false;
-			} else {
+			// 鍵付きユーザの場合はTRUEとする
+			if (user.isProtected()){
 				return true;
+			} else {
+				List<Status> statusList = twitter.getUserTimeline(user.getId());
+
+				if (!statusList.isEmpty() &&
+						fromDate.before( statusList.get(0).getCreatedAt() )) {
+					return false;
+				} else {
+					return true;
+				}
 			}
 		}
 	}

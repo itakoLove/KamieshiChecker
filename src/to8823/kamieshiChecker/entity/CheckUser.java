@@ -1,6 +1,8 @@
 package to8823.kamieshiChecker.entity;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
@@ -8,8 +10,11 @@ import twitter4j.TwitterException;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
 
 public class CheckUser extends AbstractEntity {
 	public static final String KIND_NAME = "CheckUser";
@@ -37,6 +42,10 @@ public class CheckUser extends AbstractEntity {
 		entity.setProperty(PROP_CREATE_DATE, date);
 	}
 
+	public Key getKey() {
+		return entity.getKey();
+	}
+
 	public static CheckUser getCheckUser(final DatastoreService ds, final Twitter twitter)
 			throws TwitterException {
 		CheckUser checkUser = null;
@@ -54,6 +63,19 @@ public class CheckUser extends AbstractEntity {
 		}
 
 		return checkUser;
+	}
+
+	public static List<CheckUser> getAllCheckUser(final DatastoreService ds) {
+		Query kamieshiQuery = new Query(KIND_NAME);
+
+		PreparedQuery kamieshiPq = ds.prepare(kamieshiQuery);
+
+		List<CheckUser> list = new ArrayList<CheckUser>();
+		for (Entity e: kamieshiPq.asIterable(FetchOptions.Builder.withDefaults())) {
+			list.add(new CheckUser(e));
+		}
+
+		return list;
 	}
 
 }
