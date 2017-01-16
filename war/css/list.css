@@ -190,10 +190,11 @@ body {
 }
 
 #loadingbox {
-	margin: 0;
+	margin: 20px 0 14px 0;
 	padding: 0;
 	width: 500px;
 	height: 24px;
+	float: left;
 }
 
 #loadingbox img {
@@ -216,7 +217,7 @@ body {
 }
 #continuebox {
 	border: 2px solid #505050;
-	margin: 3px 150px;
+	margin: 10px 150px 14px 150px;
 	width: 200px;
 	height: 24px;
 	line-height: 24px;

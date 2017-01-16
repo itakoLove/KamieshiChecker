@@ -27,7 +27,7 @@
 %>
 			<li><a href="/" >ホーム</a></li>
 			<li class="border"></li>
-			<li>神絵師の追加・削除</li>
+			<li><a href="/edit/kamieshi">神絵師の追加・削除</a></li>
 			<li>設定</li>
 			<li class="border"></li>
 			<li><a href="/logout" >ログアウト</a></li>
@@ -40,4 +40,7 @@
 %>
 		</ul>
 	</div>
+</div>
+<div id="resultbox">
+	結果がこちらに表示されます
 </div>

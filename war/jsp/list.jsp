@@ -29,6 +29,7 @@
 		<meta name="viewport" content="width=500px">
 		<title>神絵師チェッカー</title>
 		<link rel="stylesheet" type="text/css" href="/css/list.css?time=<%= System.currentTimeMillis() %>" media="all">
+		<script src="/js/common.js?time=<%= System.currentTimeMillis() %>" type="text/javascript"></script>
 		<script src="/js/list.js?time=<%= System.currentTimeMillis() %>" type="text/javascript"></script>
 	</head>
 <%
@@ -40,10 +41,6 @@
 		twitter.setOAuthAccessToken((AccessToken) ses.getAttribute(Constants.SESSION_ACCESS_TOKEN));
 %>
 	<body onload='getTweetList();'>
-		<div id="kamieshibox">
-			<input type="text" name="id" id="id" />
-			<button onclick="addKamieshi(); return false;">Add</button>
-		</div>
 		<div id="mainbox">
 			<div id="alltweetbox" style="display: none;"></div>
 			<div id="continuebox" style="display: none;" onclick="getTweetList(true);">
@@ -66,8 +63,5 @@
 
 		</div>
 		<jsp:include page="/jsp/header.jsp" />
-		<div id="resultbox">
-			結果がこちらに表示されます
-		</div>
 	</body>
 </html>

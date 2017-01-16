@@ -79,6 +79,10 @@ public class Kamieshi extends AbstractEntity {
 		entity.setProperty(PROP_CHECK_SEARCHABLE_DATE, argDate);
 	}
 
+	public Key getKey() {
+		return entity.getKey();
+	}
+
 	public Key getParentKey() {
 		return entity.getParent();
 	}
@@ -96,6 +100,22 @@ public class Kamieshi extends AbstractEntity {
 			return true;
 		} else {
 			return false;
+		}
+	}
+
+	public static Kamieshi getKamieshi(final DatastoreService ds, final Twitter twitter, String argUserScreenName)
+			throws TwitterException {
+		Query q = new Query(KIND_NAME);
+
+		q.setAncestor(KeyFactory.createKey(CheckUser.KIND_NAME, twitter.getId()));
+		q.setFilter(Query.FilterOperator.EQUAL.of(PROP_USER_SCREEN_NAME, argUserScreenName));
+		q.setKeysOnly();
+
+		PreparedQuery pq = ds.prepare(q);
+		if (pq.countEntities(FetchOptions.Builder.withDefaults()) != 0) {
+			return new Kamieshi(pq.asSingleEntity());
+		} else {
+			return null;
 		}
 	}
 
