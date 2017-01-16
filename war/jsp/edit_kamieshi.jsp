@@ -5,6 +5,7 @@
 <%@page import="to8823.kamieshiChecker.util.PropConstants"%>
 <%@page import="twitter4j.Twitter"%>
 <%@page import="twitter4j.TwitterFactory"%>
+<%@page import="twitter4j.TwitterException"%>
 <%@page import="twitter4j.auth.AccessToken" %>
 <%@page import="twitter4j.User" %>
 <%@page import="java.util.List" %>
@@ -42,13 +43,25 @@
 			<p>神絵師の削除</p>
 <%
 	for (Kamieshi kamieshi: kamieshis) {
-		User user = twitter.showUser("@" + kamieshi.getUserScreenName());
+		String screenName = kamieshi.getUserScreenName();
+		String name = "";
+		String profileUrl = "";
+
+		try {
+			User user = twitter.showUser("@" + kamieshi.getUserScreenName());
+
+			name = user.getName();
+			profileUrl = user.getMiniProfileImageURL();
+		} catch (TwitterException e) {
+			name = "　";
+			profileUrl = "";
+		}
 %>
-			<div class="kamieshi <%= user.getScreenName() %>">
-				<div style="width: 30px;"><img src="<%= user.getMiniProfileImageURL() %>"></div>
-				<div style="width: 139px;"><a href="https://twitter.com/<%= user.getScreenName() %>" target="_blank"><%= user.getScreenName() %></a></div>
-				<div style="width: 255px;"><%= user.getName() %></div>
-				<div style="width: 16px;"><img src="/img/batsu.png" onclick="removeKamieshi('<%= user.getScreenName() %>');"></div>
+			<div class="kamieshi <%= screenName %>">
+				<div style="width: 30px;"><img src="<%= profileUrl %>" width="24px" height="24px"></div>
+				<div style="width: 139px;"><a href="https://twitter.com/<%= screenName %>" target="_blank"><%= screenName %></a></div>
+				<div style="width: 255px;"><%= name %></div>
+				<div style="width: 16px;"><img src="/img/batsu.png" onclick="removeKamieshi('<%= screenName %>');"></div>
 			</div>
 <%
 	}
