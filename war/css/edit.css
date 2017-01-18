@@ -21,8 +21,28 @@ div {
 	-moz-border-radius: 5px;
 }
 
+#kamieshi_add_loading {
+	margin: 10px 213px;
+}
+
 .kamieshi  {
 	height: 35px;
 	width; 440 px;
 	margin: 0 5px;
+}
+
+.kamieshi .icon {
+	width: 30px;
+}
+
+.kamieshi .screen_name {
+	width: 139px;
+}
+
+.kamieshi .profile_name {
+	width: 255px;
+}
+
+.kamieshi .delete {
+	width: 16px;
 }

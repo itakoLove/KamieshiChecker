@@ -8,6 +8,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -18,6 +22,7 @@ import javax.servlet.http.HttpSession;
 import to8823.kamieshiChecker.entity.CheckUser;
 import to8823.kamieshiChecker.entity.Kamieshi;
 import to8823.kamieshiChecker.util.Constants;
+import to8823.kamieshiChecker.util.FunctionUtil;
 import to8823.kamieshiChecker.util.PropConstants;
 import twitter4j.MediaEntity;
 import twitter4j.Paging;
@@ -31,6 +36,7 @@ import twitter4j.User;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.ConfigurationBuilder;
 
+import com.google.appengine.api.ThreadManager;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.memcache.MemcacheService;
@@ -38,6 +44,7 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 
 public class GetTweetListServlet extends HttpServlet {
 	final int TWEET_PER_PAGE = 50;
+	private final int MAX_THREAD_SIZE = 50;
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -79,12 +86,8 @@ public class GetTweetListServlet extends HttpServlet {
 				try {
 					CheckUser checkUser = CheckUser.getCheckUser(ds, twitter);
 
-					List<Status> allStatuses = new ArrayList<Status>();
-
 					List<Kamieshi> kamieshis = Kamieshi.getKamieshis(ds, twitter);
-					for (Kamieshi kamieshi: kamieshis) {
-						allStatuses.addAll(getTweet(twitter, kamieshi));
-					}
+					List<Status> allStatuses = getTweet(twitter, kamieshis);
 
 					if (allStatuses.size() != 0) {
 						// ツイートの投稿日の降順にソート
@@ -116,7 +119,7 @@ public class GetTweetListServlet extends HttpServlet {
 									MediaEntity me = s.getMediaEntities()[k];
 									message = message.replace(me.getURL(), "");
 
-									imageUrl.append("\"").append(escape(me.getMediaURL())).append("\"");
+									imageUrl.append("\"").append(FunctionUtil.escape(me.getMediaURL())).append("\"");
 									if (k + 1 < s.getMediaEntities().length) {
 										imageUrl.append(",");
 									}
@@ -130,12 +133,12 @@ public class GetTweetListServlet extends HttpServlet {
 
 								result.append("{");
 								result.append("\"tweet_id\":\"" + s.getId() + "\",");
-								result.append("\"screen_name\":\"" + escape(s.getUser().getScreenName()) + "\",");
-								result.append("\"profile_name\":\"" + escape(s.getUser().getName()) + "\",");
-								result.append("\"mini_profile_image\":\"" + escape(s.getUser().getMiniProfileImageURL()) + "\",");
-								result.append("\"original_profile_image\":\"" + escape(s.getUser().getOriginalProfileImageURL()) + "\",");
-								result.append("\"tweet_text\":\"" + escape(message) + "\",");
-								result.append("\"tweet_create_date\":\"" + escape(sdf.format(s.getCreatedAt())) + "\",");
+								result.append("\"screen_name\":\"" + FunctionUtil.escape(s.getUser().getScreenName()) + "\",");
+								result.append("\"profile_name\":\"" + FunctionUtil.escape(s.getUser().getName()) + "\",");
+								result.append("\"mini_profile_image\":\"" + FunctionUtil.escape(s.getUser().getMiniProfileImageURL()) + "\",");
+								result.append("\"original_profile_image\":\"" + FunctionUtil.escape(s.getUser().getOriginalProfileImageURL()) + "\",");
+								result.append("\"tweet_text\":\"" + FunctionUtil.escape(message) + "\",");
+								result.append("\"tweet_create_date\":\"" + FunctionUtil.escape(sdf.format(s.getCreatedAt())) + "\",");
 								result.append("\"tweet_image\":[" + imageUrl.toString() + "],");
 								result.append("\"favorite_count\":" + s.getFavoriteCount() + ",");
 								result.append("\"retweet_count\":" + s.getRetweetCount());
@@ -167,47 +170,27 @@ public class GetTweetListServlet extends HttpServlet {
 		}
 	}
 
-	private List<Status> getTweet(Twitter twitter, Kamieshi kamieshi)
-		throws TwitterException {
-		if (kamieshi.canSearch()) {
-			Query q = new Query("from:" + kamieshi.getUserScreenName() + " -RT filter:images");
-			QueryResult result = twitter.search(q);
+	private List<Status> getTweet(Twitter twitter, List<Kamieshi> kamieshis)
+			throws TwitterException {
+		ThreadFactory factory = ThreadManager.currentRequestThreadFactory();
+		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREAD_SIZE, factory);
 
-			return result.getTweets();
-		} else {
-			User user = twitter.showUser("@" + kamieshi.getUserScreenName());
-			List<Status> resultList = new ArrayList<Status>();
+		List<Status> allTweet = new ArrayList<Status>();
 
-			Calendar fromCal = Calendar.getInstance();
-			fromCal.add(Calendar.DAY_OF_MONTH, -3);
-
-			Date fromDate = fromCal.getTime();
-
-			int page = 1;
-			boolean isFinish = false;
-
-			while (true) {
-				List<Status> tweetList = twitter.getUserTimeline(user.getId(), new Paging(page));
-
-				for (Status s: tweetList) {
-					if (fromDate.after(s.getCreatedAt())) {
-						isFinish = true;
-						break;
-					}
-					if (s.getMediaEntities().length != 0 && s.getText().indexOf("RT @") != 0) {
-						resultList.add(s);
-					}
-				}
-
-				if (isFinish) {
-					break;
-				} else {
-					page++;
-				}
-			}
-
-			return resultList;
+		for (Kamieshi kamieshi: kamieshis) {
+			Runnable getTweetThread = ThreadManager.createThreadForCurrentRequest(
+					new GetTweetThread(twitter, kamieshi, allTweet));
+			executor.execute(getTweetThread);
 		}
+
+		executor.shutdown();
+		try {
+			executor.awaitTermination(60, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		return allTweet;
 	}
 
 	private List<Status> sort(List<Status> argList) {
@@ -245,9 +228,64 @@ public class GetTweetListServlet extends HttpServlet {
 		return sb.toString();
 	}
 
-	private String escape(String argStr) {
-		return argStr
-				.replace("\"", "\\\"")
-				.replace("\\", "\\\\");
+}
+
+class GetTweetThread implements Runnable {
+	private Twitter twitter;
+	private Kamieshi kamieshi;
+
+	private List<Status> allTweets;
+
+	public GetTweetThread(Twitter argTwitter, Kamieshi argKamieshi, List<Status> argAllTweets) {
+		this.twitter = argTwitter;
+		this.kamieshi = argKamieshi;
+
+		this.allTweets = argAllTweets;
+	}
+
+	public void run() {
+		try {
+			if (kamieshi.canSearch()) {
+				Query q = new Query("from:" + kamieshi.getUserScreenName() + " -RT filter:images");
+				QueryResult result = twitter.search(q);
+
+				allTweets.addAll(result.getTweets());
+			} else {
+				User user = twitter.showUser("@" + kamieshi.getUserScreenName());
+				List<Status> resultList = new ArrayList<Status>();
+
+				Calendar fromCal = Calendar.getInstance();
+				fromCal.add(Calendar.DAY_OF_MONTH, -3);
+
+				Date fromDate = fromCal.getTime();
+
+				int page = 1;
+				boolean isFinish = false;
+
+				while (true) {
+					List<Status> tweetList = twitter.getUserTimeline(user.getId(), new Paging(page));
+
+					for (Status s: tweetList) {
+						if (fromDate.after(s.getCreatedAt())) {
+							isFinish = true;
+							break;
+						}
+						if (s.getMediaEntities().length != 0 && s.getText().indexOf("RT @") != 0) {
+							resultList.add(s);
+						}
+					}
+
+					if (isFinish) {
+						break;
+					} else {
+						page++;
+					}
+				}
+
+				allTweets.addAll(resultList);
+			}
+		} catch (TwitterException e) {
+			e.printStackTrace();
+		}
 	}
 }

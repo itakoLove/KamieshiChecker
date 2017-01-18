@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -20,12 +23,11 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.auth.AccessToken;
 
+import com.google.appengine.api.ThreadManager;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 
 public class CheckSearchableServlet extends HttpServlet {
-
-	private Logger log = Logger.getLogger(CheckSearchableServlet.class.getName());
 
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException ,IOException {
@@ -42,28 +44,30 @@ public class CheckSearchableServlet extends HttpServlet {
 		List<Kamieshi> kamieshis = new ArrayList<Kamieshi>();
 		List<CheckUser> checkUsers = CheckUser.getAllCheckUser(ds);
 
-		StringBuilder sb = new StringBuilder();
-
 		for (CheckUser checkUser: checkUsers) {
 			kamieshis.addAll(Kamieshi.getCheckKamieshi(ds, checkUser.getKey()));
 		}
 
 		if (!kamieshis.isEmpty()) {
 			kamieshis = sort(kamieshis);
+			kamieshis = cut(kamieshis, 50);
 
-			try {
-				for (Kamieshi kamieshi : kamieshis) {
-					kamieshi.setSearchable( FunctionUtil.searchableUser(twitter, kamieshi.getUserScreenName()) );
-					kamieshi.setCheckSearchableDate(new Date());
-
-					sb.append(kamieshi.getParentKey().getId() + "." + kamieshi.getUserScreenName() + " is checked.\r\n");
-				}
-
-				Kamieshi.save(ds, kamieshis.toArray(new Kamieshi[0]));
-			} catch (TwitterException e) {
-				e.printStackTrace();
-				log.warning(e.getMessage());
+			ThreadFactory factory = ThreadManager.currentRequestThreadFactory();
+			ExecutorService executor = Executors.newCachedThreadPool(factory);
+			for (Kamieshi kamieshi : kamieshis) {
+				Runnable checkThread = ThreadManager.createThreadForCurrentRequest(
+						new CheckSerchableThread(twitter, kamieshi));
+				executor.execute(checkThread);
 			}
+
+			executor.shutdown();
+			try {
+				executor.awaitTermination(60, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			Kamieshi.save(ds, kamieshis.toArray(new Kamieshi[0]));
 		}
 	}
 
@@ -84,7 +88,7 @@ public class CheckSearchableServlet extends HttpServlet {
 			}
 		} while(dirty);
 
-		return cut(resultList, 5);
+		return resultList;
 	}
 
 	private List<Kamieshi> cut(List<Kamieshi> argKamieshis, int size) {
@@ -93,5 +97,24 @@ public class CheckSearchableServlet extends HttpServlet {
 			resultList.add(argKamieshis.get(i));
 		}
 		return resultList;
+	}
+}
+
+class CheckSerchableThread implements Runnable {
+	Twitter twitter;
+	Kamieshi kamieshi;
+
+	CheckSerchableThread(Twitter argTwitter, Kamieshi argKamieshi) {
+		this.twitter = argTwitter;
+		this.kamieshi = argKamieshi;
+	}
+
+	public void run() {
+		try {
+			kamieshi.setSearchable( FunctionUtil.searchableUser(twitter, kamieshi.getUserScreenName()) );
+			kamieshi.setCheckSearchableDate(new Date());
+		} catch (TwitterException e) {
+			e.printStackTrace();
+		}
 	}
 }
